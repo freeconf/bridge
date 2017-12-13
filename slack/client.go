@@ -26,6 +26,10 @@ func NewClient(d device.Device) *Client {
 	}
 }
 
+func (c *Client) OnError(l ErrListener) c2.Subscription {
+	return c2.NewSubscription(c.errListeners, c.errListeners.PushBack(l))
+}
+
 type Msg struct {
 	Channel string
 	Text    string
@@ -37,6 +41,10 @@ type Connection interface {
 
 type Slack struct {
 	api *nslack.Client
+}
+
+func NewSlack(c *nslack.Client) *Slack {
+	return &Slack{api: c}
 }
 
 type Emulator struct {
@@ -145,12 +153,13 @@ func (b *Client) updateSubscriptions() {
 }
 
 func (b *Client) Apply(options Options) error {
+	b.options = options
 	if options.Emulate {
 		b.conn = NewEmulator()
 	} else {
 		api := nslack.New(b.options.ApiToken)
 		api.SetDebug(b.options.Debug)
-		b.conn = &Slack{api: api}
+		b.conn = NewSlack(api)
 	}
 
 	b.updateSubscriptions()
