@@ -3,10 +3,10 @@ package slack
 import (
 	"container/list"
 
-	"github.com/freeconf/c2g/c2"
-	"github.com/freeconf/c2g/device"
-	"github.com/freeconf/c2g/node"
-	"github.com/freeconf/c2g/nodes"
+	"github.com/freeconf/gconf/c2"
+	"github.com/freeconf/gconf/device"
+	"github.com/freeconf/gconf/node"
+	"github.com/freeconf/gconf/nodes"
 	nslack "github.com/nlopes/slack"
 )
 
