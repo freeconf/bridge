@@ -1,0 +1,10 @@
+{
+"debug":false,
+"sub":[
+  {
+    "id":"x",
+    "enable":true,
+    "active":true,
+    "counter":0,
+    "module":"slack-client",
+    "path":"err"}]}

@@ -1,0 +1,16 @@
+{
+	"restconf" : {
+		"web" : {
+			"port" : ":8080"
+		}
+	},
+	"slack-client" : {},
+	"prom-bridge" : {
+		"service" : {
+			"useLocalServer" : true
+		},
+		"modules" : {
+			"ignore" : ["ietf-yang-library"]
+		}
+	}
+}

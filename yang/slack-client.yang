@@ -1,9 +1,10 @@
 module slack-client {
-    prefix c;
+    prefix "c";
+    namespace "freeconf.org/slack-client";
     description "Bridge to send notifications to the Slack chat service";
     revision 0;
 
-    leaf token {
+    leaf apiToken {
         description "API token required for communication with slack services";
         type string;
     }
@@ -31,11 +32,13 @@ module slack-client {
         leaf enable {
             description "disable this relay";
             default true;
+            type boolean;
         }
 
         leaf active {
             description "does the relay point to a valid path";
             config false;
+            type boolean;
         }
         
         leaf channel {
@@ -71,7 +74,7 @@ module slack-client {
         description "there was error with a subscription either subscribing or sending to slack";
         leaf subId {
             type leafref {
-                path "../../subscription/id";
+                path "../../sub/id";
             }
         }
         leaf msg {

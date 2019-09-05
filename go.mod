@@ -11,4 +11,4 @@ require (
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
 )
 
-replace github.com/freeconf/gconf => ../gconf
+replace github.com/freeconf/gconf => /Users/dhubler/play/gconf

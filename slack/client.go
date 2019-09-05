@@ -73,6 +73,7 @@ type Subscription struct {
 	Id      string
 	Enable  bool
 	Channel string
+	Device  string
 	Module  string
 	Path    string
 	Counter uint32
@@ -84,9 +85,10 @@ func (s *Subscription) Active() bool {
 }
 
 type Options struct {
-	ApiToken string
-	Debug    bool
-	Emulate  bool
+	ApiToken  string
+	UserToken string
+	Debug     bool
+	Emulate   bool
 }
 
 func (b *Client) Options() Options {
