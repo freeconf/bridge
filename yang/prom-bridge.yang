@@ -5,7 +5,7 @@ module prom-bridge {
     revision 0000-00-00;
 
     import metrics-extension {
-        prefix "m";
+        prefix "metric";
     }    
 
     container service {
@@ -38,7 +38,7 @@ module prom-bridge {
         leaf count {
             description "how many items in last render";
             type int64;
-            m:metric counter;
+            metric:counter;
         }
 
         leaf duration {
