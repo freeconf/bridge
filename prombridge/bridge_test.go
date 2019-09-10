@@ -20,19 +20,27 @@ const testModule = `module x {
 	namespace "x";
 	revision 0000-00-00;
 
-	extension metric {
-		argument "type";
+	extension counter {
 	}
 	
+	extension gauge {
+	}
+
+	extension multivariate {
+		
+	}
+
 	leaf c {
 		description "int32 counter";
 		type int32;
 		config false;
-		x:metric "counter";
+		x:counter;
 	}
 
 	leaf g {
-		description "int32 gauge";
+		description "int32 gauge with
+		  multi-line description
+		";
 		type int32;
 		config false;
 	}
@@ -53,6 +61,16 @@ const testModule = `module x {
 
 	list f {
 		config false;
+		key "a b";
+		x:multivariate;
+
+		leaf a {
+			type string;
+		}
+
+		leaf b {
+			type string;
+		}
 
 		leaf g {			
 			type int32;
@@ -74,19 +92,20 @@ func TestBridge(t *testing.T) {
 		if r.Row >= 2 {
 			return nil, nil, nil
 		}
-		return n, nil, nil
+		keys, _ := node.NewValues(r.Meta.KeyMeta(), r.Row, r.Row*10)
+		return n, keys, nil
 	}
 	bwsr := node.NewBrowser(m, n)
-	var actual bytes.Buffer
-	x := newExporter(&actual)
-
-	if err := bwsr.Root().Constrain("content=nonconfig").InsertInto(x.node("x")).LastErr; err != nil {
+	x := newExporter()
+	metricNode := x.node("x", []string{})
+	if err := bwsr.Root().Constrain("content=nonconfig").InsertInto(metricNode).LastErr; err != nil {
 		t.Fatal(err)
 	}
-	x.close()
+	var actual bytes.Buffer
+	writeMetrics(&actual, x.metrics)
 	c2.Gold(t, *updateFlag, actual.Bytes(), "./gold/bridge1.txt")
 }
 
 func TestClean(t *testing.T) {
-	c2.AssertEqual(t, "prom_bridge", cleanName("prom-bridge"))
+	c2.AssertEqual(t, "prom_bridge", metricName("prom-bridge"))
 }

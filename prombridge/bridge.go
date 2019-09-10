@@ -1,15 +1,12 @@
 package prombridge
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"regexp"
-	"strings"
-	"text/template"
 	"time"
 
 	"github.com/freeconf/gconf/device"
@@ -98,7 +95,7 @@ func (b *Bridge) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (b *Bridge) generate(out io.Writer) error {
-	e := newExporter(out)
+	e := newExporter()
 	t0 := time.Now()
 
 Modules:
@@ -112,88 +109,192 @@ Modules:
 		if err != nil {
 			return err
 		}
-		sel := bwsr.Root().Constrain("content=nonconfig").InsertInto(e.node(cleanName(name)))
+		n := e.node(metricName(name), []string{})
+		sel := bwsr.Root().Constrain("content=nonconfig").InsertInto(n)
 		if sel.LastErr != nil {
 			return sel.LastErr
 		}
+		writeMetrics(out, e.metrics)
 	}
-	e.out.Flush()
 	b.RenderMetrics = RenderMetrics{
 		Duration: time.Now().Sub(t0),
-		Count:    e.count,
+		Count:    int64(len(e.metrics)),
 	}
-	fmt.Printf("m = %v\n", b.RenderMetrics)
 	return nil
 }
 
-type exporter struct {
-	out   *bufio.Writer
-	count int64
+func writeMetrics(out io.Writer, metrics map[string]*metric) {
+	for id, m := range metrics {
+		if m.helpString != "" {
+			io.WriteString(out, fmt.Sprintf("# HELP %s %s\n", id, m.helpString))
+		}
+		io.WriteString(out, fmt.Sprintf("# TYPE %s %s\n", id, m.metricType))
+		if mv, isMultivariate := m.value.([]*multivariateValue); isMultivariate {
+			for _, v := range mv {
+				io.WriteString(out, id)
+				labels := v.labels
+				if len(m.labels) > 0 {
+					labels = append(labels, m.labels...)
+				}
+				writeLabels(out, labels)
+				io.WriteString(out, fmt.Sprintf(" %v\n", v.value))
+			}
+		} else {
+			io.WriteString(out, id)
+			writeLabels(out, m.labels)
+			io.WriteString(out, fmt.Sprintf(" %v\n", m.value))
+		}
+	}
 }
 
-var metricExposition *template.Template
-
-func init() {
-	metricExposition = template.Must(template.New("metric").Parse(`# HELP {{.Name}} {{.Desc}}
-# TYPE {{.Name}} {{.Type}}
-{{.Name}} {{.Value}}
-`))
-}
-
-func newExporter(out io.Writer) *exporter {
-	return &exporter{
-		out: bufio.NewWriter(out),
+func writeLabels(out io.Writer, labels []string) {
+	if len(labels) > 0 {
+		io.WriteString(out, " {")
+		for i, label := range labels {
+			if i > 0 {
+				io.WriteString(out, ",")
+			}
+			io.WriteString(out, label)
+		}
+		io.WriteString(out, "}")
 	}
 }
 
 var invalidChars = regexp.MustCompile("[-]")
+var extraWhitespace = regexp.MustCompile(`\s+`)
 
-func cleanName(ident string) string {
+func metricName(ident string) string {
 	return invalidChars.ReplaceAllString(ident, "_")
 }
 
-func (e *exporter) node(prefix string) node.Node {
+func docString(desc string) string {
+	return extraWhitespace.ReplaceAllString(desc, " ")
+}
+
+func convValue(v val.Value, f val.Format) interface{} {
+	// TODO: support this
+	if f.IsList() {
+		return nil
+	}
+
+	switch f {
+	case val.FmtBool:
+		if v.(val.Bool) == true {
+			return 1
+		}
+		return false
+	case val.FmtString:
+		return nil
+	}
+	return v.Value()
+}
+
+type multivariateValue struct {
+	labels []string
+	value  interface{}
+}
+
+type metric struct {
+	id             string
+	helpString     string
+	metricType     string
+	labels         []string
+	isMultiVariate bool
+	value          interface{}
+}
+
+func (m *metric) isMultivariate() bool {
+	_, isMv := m.value.(*multivariateValue)
+	return isMv
+}
+
+type exporter struct {
+	metrics map[string]*metric
+}
+
+func newExporter() *exporter {
+	return &exporter{
+		metrics: make(map[string]*metric),
+	}
+}
+
+func (e *exporter) add(id string, m meta.Meta, mvLabels []string, value interface{}) {
+	thisMetric, found := e.metrics[id]
+	if !found {
+		metricType := "gauge"
+		if ext := m.Extensions().Get("counter"); ext != nil {
+			metricType = "counter"
+		}
+		thisMetric = &metric{
+			metricType: metricType,
+			helpString: docString(m.(meta.Describable).Description()),
+		}
+		e.metrics[id] = thisMetric
+	}
+	if len(mvLabels) > 0 {
+		mv := multivariateValue{
+			labels: mvLabels,
+			value:  value,
+		}
+		if thisMetric.value == nil {
+			thisMetric.value = []*multivariateValue{&mv}
+		} else {
+			thisMetric.value = append(thisMetric.value.([]*multivariateValue), &mv)
+		}
+	} else {
+		thisMetric.value = value
+	}
+}
+
+func (e *exporter) node(prefix string, mvLabels []string) node.Node {
 	return &nodes.Basic{
 		OnField: func(r node.FieldRequest, hnd *node.ValueHandle) error {
-			id := fmt.Sprintf("%s_%s", prefix, cleanName(r.Meta.Ident()))
-			promType := "gauge"
-			if ext := r.Meta.Extensions().Get("metric"); ext != nil {
-				promType = ext.Arguments()[0]
+			value := convValue(hnd.Val, r.Meta.Type().Format())
+			if value == nil {
+				return nil
 			}
-			vars := struct {
-				Desc  string
-				Type  string
-				Name  string
-				Value interface{}
-			}{
-				Desc:  strings.TrimSpace(r.Meta.(meta.Describable).Description()),
-				Type:  promType,
-				Name:  id,
-				Value: hnd.Val.Value(),
-			}
-			e.count++
-			if err := metricExposition.Execute(e.out, vars); err != nil {
-				return err
-			}
+			id := fmt.Sprintf("%s_%s", prefix, metricName(r.Meta.Ident()))
+			e.add(id, r.Meta, mvLabels, value)
 			return nil
 		},
 		OnChild: func(r node.ChildRequest) (node.Node, error) {
 			if !r.New {
 				return nil, nil
 			}
-			id := fmt.Sprintf("%s_%s", prefix, cleanName(r.Meta.Ident()))
-			return e.node(id), nil
+			id := fmt.Sprintf("%s_%s", prefix, metricName(r.Meta.Ident()))
+			if meta.IsList(r.Meta) {
+				if r.Meta.Extensions().Get("multivariate") != nil {
+					if len(r.Meta.(*meta.List).KeyMeta()) == 0 {
+						return nil, fmt.Errorf("multivariate definition for %s must have a key defined", r.Meta.Ident())
+					}
+					return e.multivariate(id, mvLabels), nil
+				}
+			}
+			return e.node(id, mvLabels), nil
 		},
 		OnNext: func(r node.ListRequest) (node.Node, []val.Value, error) {
 			if !r.New {
 				return nil, nil, nil
 			}
 			id := fmt.Sprintf("%s_%d", prefix, r.Row)
-			return e.node(id), nil, nil
+			return e.node(id, mvLabels), nil, nil
 		},
 	}
 }
 
-func (e *exporter) close() error {
-	return e.out.Flush()
+func (e *exporter) multivariate(prefix string, mvLabels []string) node.Node {
+	return &nodes.Basic{
+		OnNext: func(r node.ListRequest) (node.Node, []val.Value, error) {
+			if !r.New {
+				return nil, nil, nil
+			}
+			listLabels := mvLabels
+			metas := r.Meta.KeyMeta()
+			for i, key := range r.Key {
+				label := fmt.Sprintf("%s=\"%s\"", metas[i].Ident(), key.String())
+				listLabels = append(listLabels, label)
+			}
+			return e.node(prefix, listLabels), r.Key, nil
+		},
+	}
 }
