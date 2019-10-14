@@ -5,18 +5,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/freeconf/gconf/nodes"
+	"github.com/freeconf/yang/nodeutil"
+	"github.com/freeconf/yang/source"
 
-	"github.com/freeconf/gconf/c2"
+	"github.com/freeconf/yang/fc"
 
-	"github.com/freeconf/gconf/device"
-	"github.com/freeconf/gconf/meta"
+	"github.com/freeconf/manage/device"
 )
 
 var update = flag.Bool("update", false, "update gold files, do not compare with them")
 
 func TestMgmt(t *testing.T) {
-	ypath := &meta.FileStreamSource{Root: "../yang"}
+	ypath := source.Dir("../yang")
 	d := device.New(ypath)
 	c := NewClient(d)
 	if err := d.Add("slack-client", Manage(c)); err != nil {
@@ -38,10 +38,10 @@ func TestMgmt(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	c2.AssertEqual(t, 1, len(c.subs))
-	actual, err := nodes.WritePrettyJSON(b.Root())
+	fc.AssertEqual(t, 1, len(c.subs))
+	actual, err := nodeutil.WritePrettyJSON(b.Root())
 	if err != nil {
 		t.Error(err)
 	}
-	c2.Gold(t, *update, []byte(actual), "gold/mgmt.json")
+	fc.Gold(t, *update, []byte(actual), "gold/mgmt.json")
 }

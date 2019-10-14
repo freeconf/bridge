@@ -2,11 +2,11 @@ package slack
 
 import (
 	"container/list"
+	"fmt"
 
-	"github.com/freeconf/gconf/c2"
-	"github.com/freeconf/gconf/device"
-	"github.com/freeconf/gconf/node"
-	"github.com/freeconf/gconf/nodes"
+	"github.com/freeconf/manage/device"
+	"github.com/freeconf/yang/node"
+	"github.com/freeconf/yang/nodeutil"
 	nslack "github.com/nlopes/slack"
 )
 
@@ -26,8 +26,8 @@ func NewClient(d device.Device) *Client {
 	}
 }
 
-func (c *Client) OnError(l ErrListener) c2.Subscription {
-	return c2.NewSubscription(c.errListeners, c.errListeners.PushBack(l))
+func (c *Client) OnError(l ErrListener) nodeutil.Subscription {
+	return nodeutil.NewSubscription(c.errListeners, c.errListeners.PushBack(l))
 }
 
 type Msg struct {
@@ -114,7 +114,7 @@ func (b *Client) updateSubscription(r *Subscription) error {
 	}
 	sel := bwsr.Root().Find(r.Path)
 	if sel.IsNil() {
-		return c2.NewErr(r.Path + " not found in module " + r.Module)
+		return fmt.Errorf("%s not found in module %s", r.Path, r.Module)
 	}
 	r.sub, err = sel.Notifications(b.stream(r))
 	if err != nil {
@@ -131,7 +131,7 @@ func (b *Client) onErr(r *Subscription, err error) {
 
 func (b *Client) stream(r *Subscription) node.NotifyStream {
 	return func(msg node.Selection) {
-		txt, err := nodes.WriteJSON(msg)
+		txt, err := nodeutil.WriteJSON(msg)
 		if err != nil {
 			b.onErr(r, err)
 			return

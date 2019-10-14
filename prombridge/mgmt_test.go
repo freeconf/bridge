@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/freeconf/gconf/device"
-	"github.com/freeconf/gconf/meta"
+	"github.com/freeconf/manage/device"
+	"github.com/freeconf/yang/source"
 )
 
 func TestBridgeMgmt(t *testing.T) {
-	ypath := &meta.FileStreamSource{Root: "../yang"}
+	ypath := source.Dir("../yang")
 	d := device.New(ypath)
 	b := NewBridge(d)
 	if err := d.Add("prom-bridge", Manage(b)); err != nil {

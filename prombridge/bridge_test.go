@@ -3,14 +3,16 @@ package prombridge
 import (
 	"bytes"
 	"flag"
+	"strings"
 	"testing"
 
-	"github.com/freeconf/gconf/c2"
+	"github.com/freeconf/yang/fc"
+	"github.com/freeconf/yang/source"
 
-	"github.com/freeconf/gconf/meta/yang"
-	"github.com/freeconf/gconf/node"
-	"github.com/freeconf/gconf/nodes"
-	"github.com/freeconf/gconf/val"
+	"github.com/freeconf/yang/node"
+	"github.com/freeconf/yang/nodeutil"
+	"github.com/freeconf/yang/parser"
+	"github.com/freeconf/yang/val"
 )
 
 var updateFlag = flag.Bool("update", false, "update golden files instead of verifying against them")
@@ -20,21 +22,15 @@ const testModule = `module x {
 	namespace "x";
 	revision 0000-00-00;
 
-	extension counter {
-	}
-	
-	extension gauge {
-	}
-
-	extension multivariate {
-		
+	import metrics-extension {
+		prefix "metrics";
 	}
 
 	leaf c {
 		description "int32 counter";
 		type int32;
 		config false;
-		x:counter;
+		metrics:counter;
 	}
 
 	leaf g {
@@ -62,7 +58,7 @@ const testModule = `module x {
 	list f {
 		config false;
 		key "a b";
-		x:multivariate;
+		metrics:multivariate;
 
 		leaf a {
 			type string;
@@ -79,8 +75,14 @@ const testModule = `module x {
 }`
 
 func TestBridge(t *testing.T) {
-	m := yang.RequireModuleFromString(nil, testModule)
-	n := &nodes.Basic{}
+	ypath := source.Any(
+		source.Named("x", strings.NewReader(testModule)),
+		source.Dir("../yang"))
+	m, err := parser.LoadModuleFromString(ypath, testModule)
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := &nodeutil.Basic{}
 	n.OnField = func(r node.FieldRequest, hnd *node.ValueHandle) error {
 		hnd.Val = val.Int32(99)
 		return nil
@@ -103,9 +105,9 @@ func TestBridge(t *testing.T) {
 	}
 	var actual bytes.Buffer
 	writeMetrics(&actual, x.metrics)
-	c2.Gold(t, *updateFlag, actual.Bytes(), "./gold/bridge1.txt")
+	fc.Gold(t, *updateFlag, actual.Bytes(), "./gold/bridge1.txt")
 }
 
 func TestClean(t *testing.T) {
-	c2.AssertEqual(t, "prom_bridge", metricName("prom-bridge"))
+	fc.AssertEqual(t, "prom_bridge", metricName("prom-bridge"))
 }

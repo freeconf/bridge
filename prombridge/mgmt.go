@@ -3,19 +3,19 @@ package prombridge
 import (
 	"time"
 
-	"github.com/freeconf/gconf/node"
-	"github.com/freeconf/gconf/nodes"
-	"github.com/freeconf/gconf/val"
+	"github.com/freeconf/yang/node"
+	"github.com/freeconf/yang/nodeutil"
+	"github.com/freeconf/yang/val"
 )
 
 func Manage(b *Bridge) node.Node {
-	return &nodes.Basic{
+	return &nodeutil.Basic{
 		OnChild: func(r node.ChildRequest) (node.Node, error) {
 			switch r.Meta.Ident() {
 			case "service":
 				return serviceNode(b), nil
 			case "modules":
-				return nodes.ReflectChild(&b.Modules), nil
+				return nodeutil.ReflectChild(&b.Modules), nil
 			case "render":
 				return renderMetrics(b.RenderMetrics), nil
 			}
@@ -25,8 +25,8 @@ func Manage(b *Bridge) node.Node {
 }
 
 func renderMetrics(m RenderMetrics) node.Node {
-	return &nodes.Extend{
-		Base: nodes.ReflectChild(&m),
+	return &nodeutil.Extend{
+		Base: nodeutil.ReflectChild(&m),
 		OnField: func(p node.Node, r node.FieldRequest, hnd *node.ValueHandle) error {
 			switch r.Meta.Ident() {
 			case "duration":
@@ -41,8 +41,8 @@ func renderMetrics(m RenderMetrics) node.Node {
 
 func serviceNode(b *Bridge) node.Node {
 	options := b.Options()
-	return &nodes.Extend{
-		Base: nodes.ReflectChild(&options),
+	return &nodeutil.Extend{
+		Base: nodeutil.ReflectChild(&options),
 		OnEndEdit: func(p node.Node, r node.NodeRequest) error {
 			if err := p.EndEdit(r); err != nil {
 				return err

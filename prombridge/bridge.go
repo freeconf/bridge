@@ -9,12 +9,12 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/freeconf/gconf/device"
-	"github.com/freeconf/gconf/meta"
-	"github.com/freeconf/gconf/node"
-	"github.com/freeconf/gconf/nodes"
-	"github.com/freeconf/gconf/restconf"
-	"github.com/freeconf/gconf/val"
+	"github.com/freeconf/manage/device"
+	"github.com/freeconf/manage/restconf"
+	"github.com/freeconf/yang/meta"
+	"github.com/freeconf/yang/node"
+	"github.com/freeconf/yang/nodeutil"
+	"github.com/freeconf/yang/val"
 )
 
 type Bridge struct {
@@ -42,7 +42,7 @@ type RenderMetrics struct {
 
 func (b *Bridge) Apply(options Options) error {
 	if options.Port == "" {
-		bwsr, err := b.device.Browser("restconf")
+		bwsr, err := b.device.Browser("fc-restconf")
 		if err != nil {
 			return err
 		}
@@ -124,6 +124,7 @@ Modules:
 }
 
 func writeMetrics(out io.Writer, metrics map[string]*metric) {
+	// TODO: Need to sort this, unit test failing randomly
 	for id, m := range metrics {
 		if m.helpString != "" {
 			io.WriteString(out, fmt.Sprintf("# HELP %s %s\n", id, m.helpString))
@@ -247,7 +248,7 @@ func (e *exporter) add(id string, m meta.Meta, mvLabels []string, value interfac
 }
 
 func (e *exporter) node(prefix string, mvLabels []string) node.Node {
-	return &nodes.Basic{
+	return &nodeutil.Basic{
 		OnField: func(r node.FieldRequest, hnd *node.ValueHandle) error {
 			value := convValue(hnd.Val, r.Meta.Type().Format())
 			if value == nil {
@@ -283,7 +284,7 @@ func (e *exporter) node(prefix string, mvLabels []string) node.Node {
 }
 
 func (e *exporter) multivariate(prefix string, mvLabels []string) node.Node {
-	return &nodes.Basic{
+	return &nodeutil.Basic{
 		OnNext: func(r node.ListRequest) (node.Node, []val.Value, error) {
 			if !r.New {
 				return nil, nil, nil

@@ -1,32 +1,34 @@
 package slack
 
-import "testing"
-import "github.com/freeconf/gconf/device"
-import "github.com/freeconf/gconf/meta"
-import "github.com/freeconf/gconf/nodes"
-import "github.com/freeconf/gconf/node"
-import "github.com/freeconf/gconf/c2"
-import "time"
-import "os"
+import (
+	"os"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/freeconf/manage/device"
+	"github.com/freeconf/yang/fc"
+	"github.com/freeconf/yang/node"
+	"github.com/freeconf/yang/nodeutil"
+	"github.com/freeconf/yang/source"
+)
 
 func TestClient(t *testing.T) {
-	mstr := func(r string) (string, error) {
-		return `module m {
+	mstr := `
+		module m {
 			revision 0;
 			notification n {
 				leaf x {
 					type string;
 				}
 			}
-		}
-		`, nil
-	}
+		}`
 	send := make(chan string)
-	d := device.New(&meta.StringSource{Streamer: mstr})
-	n := &nodes.Basic{
+	d := device.New(source.Named("m", strings.NewReader(mstr)))
+	n := &nodeutil.Basic{
 		OnNotify: func(r node.NotifyRequest) (node.NotifyCloser, error) {
 			go func() {
-				r.Send(nodes.ReadJSON(<-send))
+				r.Send(nodeutil.ReadJSON(<-send))
 			}()
 			nop := func() error {
 				return nil
@@ -59,8 +61,8 @@ func TestClient(t *testing.T) {
 			send <- msg
 		}()
 		actual := <-e.msgs
-		c2.AssertEqual(t, "c", actual.Channel)
-		c2.AssertEqual(t, msg, actual.Text)
+		fc.AssertEqual(t, "c", actual.Channel)
+		fc.AssertEqual(t, msg, actual.Text)
 	})
 
 	t.Run("real", func(t *testing.T) {

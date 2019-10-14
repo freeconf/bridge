@@ -1,15 +1,15 @@
 package slack
 
 import (
-	"github.com/freeconf/gconf/node"
-	"github.com/freeconf/gconf/nodes"
-	"github.com/freeconf/gconf/val"
+	"github.com/freeconf/yang/node"
+	"github.com/freeconf/yang/nodeutil"
+	"github.com/freeconf/yang/val"
 )
 
 func Manage(c *Client) node.Node {
 	options := c.Options()
-	return &nodes.Extend{
-		Base: nodes.ReflectChild(&options),
+	return &nodeutil.Extend{
+		Base: nodeutil.ReflectChild(&options),
 		OnChild: func(p node.Node, r node.ChildRequest) (node.Node, error) {
 			switch r.Meta.Ident() {
 			case "sub":
@@ -32,7 +32,7 @@ func Manage(c *Client) node.Node {
 						"subId": sub.Id,
 						"msg":   err.Error(),
 					}
-					r.Send(nodes.ReflectChild(msg))
+					r.Send(nodeutil.ReflectChild(msg))
 				})
 				return sub.Close, nil
 			}
@@ -46,7 +46,7 @@ func Manage(c *Client) node.Node {
 
 func manageSubs(subs map[string]*Subscription) node.Node {
 	index := node.NewIndex(subs)
-	return &nodes.Basic{
+	return &nodeutil.Basic{
 		Peekable: subs,
 		OnNext: func(r node.ListRequest) (node.Node, []val.Value, error) {
 			var sub *Subscription
@@ -79,8 +79,8 @@ func manageSubs(subs map[string]*Subscription) node.Node {
 }
 
 func manageSub(s *Subscription) node.Node {
-	return &nodes.Extend{
-		Base: nodes.ReflectChild(s),
+	return &nodeutil.Extend{
+		Base: nodeutil.ReflectChild(s),
 		OnField: func(p node.Node, r node.FieldRequest, hnd *node.ValueHandle) error {
 			switch r.Meta.Ident() {
 			case "active":
