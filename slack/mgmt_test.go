@@ -10,7 +10,7 @@ import (
 
 	"github.com/freeconf/yang/fc"
 
-	"github.com/freeconf/manage/device"
+	"github.com/freeconf/restconf/device"
 )
 
 var update = flag.Bool("update", false, "update gold files, do not compare with them")

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/freeconf/manage/device"
+	"github.com/freeconf/restconf/device"
 	"github.com/freeconf/yang/source"
 )
 
