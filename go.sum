@@ -11,11 +11,16 @@ github.com/freeconf/restconf v0.0.0-20190928152552-c94a450e817a h1:SS0gtMh/DKjJc
 github.com/freeconf/restconf v0.0.0-20190928152552-c94a450e817a/go.mod h1:Phcp+QFcjbqMQiOj5NZGJhcDXtsyJMtCb3dRC3c/Esw=
 github.com/freeconf/restconf v0.0.0-20200122125951-25e0156fb002 h1:savN7bBjaHOOOxoL1v1NO0xnjz9mPTEHL0dG4mpS5tg=
 github.com/freeconf/restconf v0.0.0-20200122125951-25e0156fb002/go.mod h1:ZwOUDTtAqkZtLvnNz/Wo0nvfMierhGLySwA5yaqgIgU=
+github.com/freeconf/restconf v0.0.0-20220823014844-bff6b831b4a9 h1:KjcwGwo7EBIWWkHefZEMIPE5lU0n5xhz/QL4hQn1s8U=
+github.com/freeconf/restconf v0.0.0-20220823014844-bff6b831b4a9/go.mod h1:OLwQ4Sp+pHutIXfhiH/+Vb2V5stjpI/JJncUmlXafDE=
 github.com/freeconf/yang v0.0.0-20190915134354-9d96c3c868e8 h1:OuvKVq2y2MOaxiFx4juYvD9xfSbZpjxJPWZV4b6Hbts=
 github.com/freeconf/yang v0.0.0-20190915134354-9d96c3c868e8/go.mod h1:LM+xUWSA0mw8zkrD02X8tsEI+L6hBGc/MDOiVXQRCuM=
 github.com/freeconf/yang v0.0.0-20191004224936-946e09ffc9b4 h1:qSsfNK5lX0TUR1znpO4s+NT7pYXPNmZIV4nw1ciXbas=
 github.com/freeconf/yang v0.0.0-20200122003835-a31e8a9b9760 h1:z6OgG+If6z2tyLKN9mqfQ34R/U4wn+TjTerd+usqSYI=
 github.com/freeconf/yang v0.0.0-20200122003835-a31e8a9b9760/go.mod h1:1umw1W13lLvPkHIqdUgmrTzLAmDXkbhrYng0Jrs92tw=
+github.com/freeconf/yang v0.0.0-20220720120251-af68a4c1add5/go.mod h1:oYllgZJESUAQ10c/p3oc2OZnYTXFjDierqKP/OaiJyk=
+github.com/freeconf/yang v0.0.0-20220824110837-fb22298e8266 h1:FBbxPLh7GLQMOQjT+FAGPp7NBKOjuU5ZgWDGuuMQSW8=
+github.com/freeconf/yang v0.0.0-20220824110837-fb22298e8266/go.mod h1:oYllgZJESUAQ10c/p3oc2OZnYTXFjDierqKP/OaiJyk=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=
 github.com/go-logfmt/logfmt v0.3.0/go.mod h1:Qt1PoO58o5twSAckw1HlFXLmHsOX5/0LbT9GBnD5lWE=
 github.com/go-logfmt/logfmt v0.4.0/go.mod h1:3RMwSq7FuexP4Kalkev3ejPJsZTpXXBr9+V4qmtdjCk=
@@ -98,6 +103,7 @@ golang.org/x/tools v0.0.0-20190913181337-0240832f5c3d/go.mod h1:b+2E5dAYhXwXZwtn
 golang.org/x/tools v0.0.0-20191010201905-e5ffc44a6fee/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
 golang.org/x/tools v0.0.0-20200119215504-eb0d8dd85bcc/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/tools v0.0.0-20200121210457-b3205ff6fffe/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
+golang.org/x/tools v0.0.0-20200124162111-628e9aa307e6/go.mod h1:TB2adYChydJhpapKDTa4BR/hXlZSLoq2Wpct/0txZ28=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 gopkg.in/alecthomas/kingpin.v2 v2.2.6/go.mod h1:FMv+mEhP44yOT+4EoQTLFTRgOQ1FBLkstjWtayDeSgw=

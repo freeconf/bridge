@@ -223,7 +223,7 @@ func (e *exporter) add(id string, m meta.Meta, mvLabels []string, value interfac
 	thisMetric, found := e.metrics[id]
 	if !found {
 		metricType := "gauge"
-		if ext := m.Extensions().Get("counter"); ext != nil {
+		if ext := meta.FindExtension("counter", m.Extensions()); ext != nil {
 			metricType = "counter"
 		}
 		thisMetric = &metric{
@@ -264,7 +264,7 @@ func (e *exporter) node(prefix string, mvLabels []string) node.Node {
 			}
 			id := fmt.Sprintf("%s_%s", prefix, metricName(r.Meta.Ident()))
 			if meta.IsList(r.Meta) {
-				if r.Meta.Extensions().Get("multivariate") != nil {
+				if meta.FindExtension("multivariate", r.Meta.Extensions()) != nil {
 					if len(r.Meta.(*meta.List).KeyMeta()) == 0 {
 						return nil, fmt.Errorf("multivariate definition for %s must have a key defined", r.Meta.Ident())
 					}
